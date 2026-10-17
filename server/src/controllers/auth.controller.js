@@ -96,7 +96,8 @@ export const verifyOTP = async (req, res) => {
                 lastSeen: user.lastSeen
             }
         })
-    } catch {
+    } catch (err) {
+        console.error('verifyOTP error:', err)
         res.status(500).json({
             message: "Server error"
         })
