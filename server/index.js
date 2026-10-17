@@ -15,17 +15,24 @@ import userRoutes from './src/routes/user.routes.js'
 import uploadRoutes from './src/routes/upload.routes.js'
 
 const app = express()
-const server = http.createServer(app)
 
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }))
 app.use(express.json())
 app.use(cookieParser())
 
-connectDB()
 connectRedis()
-initSocket(server)
 
 app.get('/', (req, res) => res.json({ message: 'SafeTalk API running' }))
+app.use('/api', async (req, res, next) => {
+    try {
+        await connectDB()
+        next()
+    } catch (err) {
+        console.error('Database connection failed:', err)
+        res.status(503).json({ message: 'Database unavailable' })
+    }
+})
+
 app.use('/api/auth', authRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/conversations', conversationRoutes)
@@ -33,5 +40,16 @@ app.use('/api/messages', messageRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/upload', uploadRoutes)
 
-const PORT = process.env.PORT || 5000
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+if (process.env.VERCEL !== '1') {
+    const server = http.createServer(app)
+    initSocket(server)
+
+    const PORT = process.env.PORT || 5000
+    server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+    connectDB().catch(err => {
+        console.error('Database connection failed:', err)
+        process.exit(1)
+    })
+}
+
+export default app

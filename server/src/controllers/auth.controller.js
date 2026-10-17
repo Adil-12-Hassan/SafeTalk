@@ -51,7 +51,8 @@ export const requestOTP = async (req, res) => {
         res.json({
             message: "OTP send to your email"
         })
-    } catch {
+    } catch (err) {
+        console.error('OTP request failed:', err)
         res.status(500).json({
             message: 'Server Error'
         })
