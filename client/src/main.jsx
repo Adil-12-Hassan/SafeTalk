@@ -1,0 +1,26 @@
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+import { AuthProvider } from './context/AuthContext.jsx'
+import { SocketProvider } from './context/SocketContext.jsx'
+import { Toaster } from 'react-hot-toast'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+        <AuthProvider>
+            <SocketProvider>
+                <Toaster
+                    position="top-center"
+                    toastOptions={{
+                        style: {
+                            background: '#202C33',
+                            color: '#E9EDEF'
+                        }
+                    }}
+                />
+                <App />
+            </SocketProvider>
+        </AuthProvider>
+    </React.StrictMode>
+)
