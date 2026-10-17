@@ -15,7 +15,7 @@ const Chat = () => {
     return (
         <div className="flex h-screen bg-dark-bg overflow-hidden">
 
-            {/* Sidebar — hidden on mobile when chat open */}
+            {/* Sidebar - hidden on mobile when chat open */}
             <div className={`
         ${isMobileChatOpen ? 'hidden' : 'flex'} md:flex
         w-full md:w-80 shrink-0
