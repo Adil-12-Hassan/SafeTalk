@@ -33,8 +33,8 @@ const MessageBubble = ({ message, onDelete }) => {
 
     const renderStatus = () => {
         if (!isOwn) return null
-        const readCount = message.readBy?.length - 1
-        const deliveredCount = message.deliveredTo?.length - 1
+        const readCount = (message.readBy?.length ?? 0) - 1
+        const deliveredCount = (message.deliveredTo?.length ?? 0) - 1
         if (readCount > 0) return <span className="text-blue-400 text-xs">✓✓</span>
         if (deliveredCount > 0) return <span className="text-gray-400 text-xs">✓✓</span>
         return <span className="text-gray-400 text-xs">✓</span>

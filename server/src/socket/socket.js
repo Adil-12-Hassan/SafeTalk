@@ -17,8 +17,13 @@ export const initSocket = (server, clientOrigin) => {
     // Auth middleware for socket
     io.use(async (socket, next) => {
         try {
-            const token = socket.handshake.auth.token ||
-                socket.handshake.headers.cookie?.split('token=')[1]
+            const cookieHeader = socket.handshake.headers.cookie || ''
+            const cookieToken = cookieHeader
+                .split(';')
+                .map(c => c.trim())
+                .find(c => c.startsWith('token='))
+                ?.split('=')[1]
+            const token = socket.handshake.auth.token || cookieToken
 
             if (!token) return next(new Error('Unauthorized'))
 
@@ -28,7 +33,8 @@ export const initSocket = (server, clientOrigin) => {
 
             socket.user = user
             next()
-        } catch {
+        } catch (err) {
+            console.error('Socket auth error:', err.message)
             next(new Error('Invalid token'))
         }
     })

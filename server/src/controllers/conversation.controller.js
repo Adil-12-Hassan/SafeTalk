@@ -30,7 +30,8 @@ export const getOrCreateDirect = async (req, res) => {
         await redis.del(`conversations:${req.user._id}`)
 
         res.json({ conversation })
-    } catch {
+    } catch (err) {
+        console.error('getOrCreateDirect error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -61,7 +62,8 @@ export const createGroup = async (req, res) => {
         )
 
         res.status(201).json({ conversation })
-    } catch {
+    } catch (err) {
+        console.error('createGroup error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -86,7 +88,8 @@ export const getMyConversations = async (req, res) => {
         await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(conversations))
 
         res.json({ conversations })
-    } catch {
+    } catch (err) {
+        console.error('getMyConversations error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -104,7 +107,8 @@ export const getConversation = async (req, res) => {
         if (!conversation) return res.status(404).json({ message: 'Conversation not found' })
 
         res.json({ conversation })
-    } catch {
+    } catch (err) {
+        console.error('getConversation error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -131,7 +135,8 @@ export const updateGroup = async (req, res) => {
         )
 
         res.json({ conversation })
-    } catch {
+    } catch (err) {
+        console.error('updateGroup error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -147,7 +152,7 @@ export const addParticipant = async (req, res) => {
         })
 
         if (!conversation) return res.status(404).json({ message: 'Group not found or not admin' })
-        if (conversation.participants.includes(userId)) {
+        if (conversation.participants.some(p => p.toString() === userId)) {
             return res.status(400).json({ message: 'User already in group' })
         }
 
@@ -156,7 +161,8 @@ export const addParticipant = async (req, res) => {
         await redis.del(`conversations:${userId}`)
 
         res.json({ message: 'Participant added', conversation })
-    } catch {
+    } catch (err) {
+        console.error('addParticipant error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -180,7 +186,8 @@ export const removeParticipant = async (req, res) => {
         await redis.del(`conversations:${userId}`)
 
         res.json({ message: 'Participant removed', conversation })
-    } catch {
+    } catch (err) {
+        console.error('removeParticipant error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }

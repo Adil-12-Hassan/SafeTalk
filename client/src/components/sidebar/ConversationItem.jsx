@@ -23,10 +23,11 @@ const ConversationItem = ({ conversation, isActive, onClick }) => {
             ? `📎 ${lastMsg.fileName || 'File'}`
             : lastMsg?.content || 'No messages yet'
 
-    // Unread count
-    const unread = conversation.messages?.filter(
-        m => !m.readBy?.includes(user?._id)
-    ).length || 0
+    // Unread count: conversation objects don't include a messages array.
+    // Show indicator when lastMessage exists and current user isn't in its readBy list.
+    const unread = lastMsg && lastMsg.sender !== user?._id &&
+        !(lastMsg.readBy?.some(id => id === user?._id || id?.toString() === user?._id))
+        ? 1 : 0
 
     return (
         <div

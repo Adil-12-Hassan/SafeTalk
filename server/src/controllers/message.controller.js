@@ -44,7 +44,8 @@ export const sendMessage = async (req, res) => {
         )
 
         res.status(201).json({ message })
-    } catch {
+    } catch (err) {
+        console.error('sendMessage error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -96,7 +97,8 @@ export const getMessages = async (req, res) => {
         }
 
         res.json(result)
-    } catch {
+    } catch (err) {
+        console.error('getMessages error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -105,6 +107,13 @@ export const getMessages = async (req, res) => {
 export const markAsRead = async (req, res) => {
     try {
         const { conversationId } = req.body
+
+        // Verify user is a participant before marking as read
+        const conversation = await Conversation.findOne({
+            _id: conversationId,
+            participants: req.user._id
+        })
+        if (!conversation) return res.status(403).json({ message: 'Not a participant' })
 
         await Message.updateMany(
             {
@@ -118,7 +127,8 @@ export const markAsRead = async (req, res) => {
         await redis.del(`messages:${conversationId}:1`)
 
         res.json({ message: 'Marked as read' })
-    } catch {
+    } catch (err) {
+        console.error('markAsRead error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -138,7 +148,8 @@ export const deleteMessage = async (req, res) => {
         await redis.del(`messages:${message.conversationId}:1`)
 
         res.json({ message: 'Message deleted' })
-    } catch {
+    } catch (err) {
+        console.error('deleteMessage error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
