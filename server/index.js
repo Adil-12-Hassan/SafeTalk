@@ -15,8 +15,9 @@ import userRoutes from './src/routes/user.routes.js'
 import uploadRoutes from './src/routes/upload.routes.js'
 
 const app = express()
+const clientOrigin = process.env.CLIENT_URL?.trim().replace(/\/+$/, '')
 
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }))
+app.use(cors({ origin: clientOrigin, credentials: true }))
 app.use(express.json())
 app.use(cookieParser())
 
@@ -42,7 +43,7 @@ app.use('/api/upload', uploadRoutes)
 
 if (process.env.VERCEL !== '1') {
     const server = http.createServer(app)
-    initSocket(server)
+    initSocket(server, clientOrigin)
 
     const PORT = process.env.PORT || 5000
     server.listen(PORT, () => console.log(`Server running on port ${PORT}`))

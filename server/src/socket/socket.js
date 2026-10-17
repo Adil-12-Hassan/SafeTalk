@@ -8,9 +8,9 @@ import { redis } from '../config/redis.js'
 const ONLINE_USERS_KEY = 'online_users'
 let io
 
-export const initSocket = (server) => {
+export const initSocket = (server, clientOrigin) => {
     io = new Server(server, {
-        cors: { origin: process.env.CLIENT_URL, credentials: true },
+        cors: { origin: clientOrigin, credentials: true },
         pingTimeout: 60000
     })
 
