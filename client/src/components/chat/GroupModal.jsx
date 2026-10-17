@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { searchUsers } from '../../api/user.api'
 import { createGroup } from '../../api/conversation.api'
 import useChatStore from '../../store/chatStore'
+import useAuthStore from '../../store/authStore'
 import Avatar from '../shared/Avatar'
 import toast from 'react-hot-toast'
 
@@ -12,6 +13,7 @@ const GroupModal = ({ onClose }) => {
     const [selected, setSelected] = useState([])
     const [loading, setLoading] = useState(false)
     const { conversations, setConversations, setActiveConversation } = useChatStore()
+    const { user: currentUser } = useAuthStore()
     const timerRef = useRef(null)
 
     const handleSearch = (e) => {
@@ -44,7 +46,7 @@ const GroupModal = ({ onClose }) => {
         try {
             const { data } = await createGroup(groupName, selected.map(s => s._id))
             setConversations([data.conversation, ...conversations])
-            setActiveConversation(data.conversation)
+            setActiveConversation(data.conversation, currentUser?._id)
             toast.success('Group created!')
             onClose()
         } catch {

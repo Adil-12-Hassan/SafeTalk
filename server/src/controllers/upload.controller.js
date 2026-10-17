@@ -32,7 +32,7 @@ export const uploadFile = async (req, res) => {
 // Upload avatar
 export const uploadAvatar = async (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ message: 'No file uploaded' })
+        if (!req.file) return res.status(400).json({ message: 'Choose a JPEG, PNG, or WebP profile image' })
         res.json({
             url: req.file.path,
             publicId: req.file.filename

@@ -9,7 +9,10 @@ const transporter = nodemailer.createTransport({
 })
 export const sendOTPEmail = async (email, otp) => {
     await transporter.sendMail({
-        from: `"Safe <${process.env.EMAIL_USER}`,
+        from: {
+            name: 'SafeTalk <no-reply>',
+            address: process.env.EMAIL_USER
+        },
         to: email,
         subject: 'Your SafeTalk OTP',
         html: `

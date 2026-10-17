@@ -30,6 +30,11 @@ const avatarStorage = new CloudinaryStorage({
 })
 
 const limits = { fileSize: 10 * 1024 * 1024 }
+const avatarTypes = ['image/jpeg', 'image/png', 'image/webp']
+const avatarLimits = { fileSize: 200 * 1024 }
+const avatarFileFilter = (_req, file, callback) => {
+    callback(null, avatarTypes.includes(file.mimetype))
+}
 export const uploadImage = multer({ storage: imageStorage, limits })
 export const uploadFile = multer({ storage: fileStorage, limits })
-export const uploadAvatar = multer({ storage: avatarStorage, limits })
+export const uploadAvatar = multer({ storage: avatarStorage, limits: avatarLimits, fileFilter: avatarFileFilter })

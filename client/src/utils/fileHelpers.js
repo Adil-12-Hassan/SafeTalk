@@ -18,6 +18,15 @@ export const uploadFile = async (file) => {
     return data
 }
 
+export const uploadAvatar = async (file) => {
+    const formData = new FormData()
+    formData.append('avatar', file)
+    const { data } = await api.post('/upload/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return data
+}
+
 export const isImageFile = (file) => file.type.startsWith('image/')
 
 export const formatFileSize = (bytes) => {

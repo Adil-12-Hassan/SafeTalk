@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 
+const getConversationStorageKey = (userId) => `safetalk:lastConversation:${userId}`
+
 const useChatStore = create((set) => ({
     conversations: [],
     activeConversation: null,
@@ -12,6 +14,13 @@ const useChatStore = create((set) => ({
     // Conversations
     setConversations: (conversations) => set({ conversations }),
 
+    restoreActiveConversation: (userId) => set((state) => {
+        if (!userId || state.activeConversation) return {}
+        const conversationId = localStorage.getItem(getConversationStorageKey(userId))
+        const conversation = state.conversations.find(item => item._id === conversationId)
+        return conversation ? { activeConversation: conversation } : {}
+    }),
+
     updateConversationLastMessage: (conversationId, message) => set((state) => ({
         conversations: state.conversations
             .map(c => c._id === conversationId
@@ -21,12 +30,20 @@ const useChatStore = create((set) => ({
             .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
     })),
 
-    setActiveConversation: (conversation) => set({
-        activeConversation: conversation,
-        messages: [],
-        hasMore: false,
-        nextCursor: null
-    }),
+    setActiveConversation: (conversation, userId) => {
+        if (userId) {
+            const storageKey = getConversationStorageKey(userId)
+            if (conversation?._id) localStorage.setItem(storageKey, conversation._id)
+            else localStorage.removeItem(storageKey)
+        }
+
+        set({
+            activeConversation: conversation,
+            messages: [],
+            hasMore: false,
+            nextCursor: null
+        })
+    },
 
     // Messages
     setMessages: (messages, hasMore, nextCursor) => set({ messages, hasMore, nextCursor }),

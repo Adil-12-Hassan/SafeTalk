@@ -28,18 +28,7 @@ const Chat = () => {
         ${isMobileChatOpen ? 'flex' : 'hidden'} md:flex
         flex-1 flex-col
       `}>
-                {/* Mobile back button */}
-                {isMobileChatOpen && (
-                    <div className="md:hidden">
-                        <button
-                            onClick={() => setMobileChatOpen(false)}
-                            className="absolute top-3 left-3 z-10 text-gray-400 hover:text-white p-1"
-                        >
-                            ← Back
-                        </button>
-                    </div>
-                )}
-                <ChatWindow />
+                <ChatWindow onBack={() => setMobileChatOpen(false)} />
             </div>
         </div>
     )

@@ -1,10 +1,8 @@
-import dotenv from 'dotenv'
+import 'dotenv/config'
 import express from 'express'
 import http from 'http'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
-
-dotenv.config()
 
 import connectDB from './src/config/db.js'
 import connectRedis from './src/config/redis.js'

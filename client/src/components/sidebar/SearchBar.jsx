@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { searchUsers } from '../../api/user.api'
 import { getOrCreateDirect } from '../../api/conversation.api'
 import useChatStore from '../../store/chatStore'
+import useAuthStore from '../../store/authStore'
 import Avatar from '../shared/Avatar'
 import toast from 'react-hot-toast'
 
@@ -10,6 +11,7 @@ const SearchBar = ({ onClose }) => {
     const [results, setResults] = useState([])
     const [loading, setLoading] = useState(false)
     const { setActiveConversation, conversations, setConversations } = useChatStore()
+    const { user: currentUser } = useAuthStore()
     const timerRef = useRef(null)
 
     const handleSearch = (e) => {
@@ -33,7 +35,7 @@ const SearchBar = ({ onClose }) => {
     const handleSelect = async (user) => {
         try {
             const { data } = await getOrCreateDirect(user._id)
-            setActiveConversation(data.conversation)
+            setActiveConversation(data.conversation, currentUser?._id)
             const exists = conversations.find(c => c._id === data.conversation._id)
             if (!exists) setConversations([data.conversation, ...conversations])
             onClose()

@@ -10,7 +10,7 @@ import Avatar from '../shared/Avatar'
 import { formatLastSeen } from '../../utils/formatTime'
 import toast from 'react-hot-toast'
 
-const ChatWindow = () => {
+const ChatWindow = ({ onBack }) => {
     const {
         activeConversation, messages, hasMore, nextCursor,
         setMessages, prependMessages, removeMessage,
@@ -145,6 +145,14 @@ const ChatWindow = () => {
 
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 bg-dark-sidebar border-b border-dark-border">
+                <button
+                    type="button"
+                    onClick={onBack}
+                    className="md:hidden shrink-0 text-gray-400 hover:text-white"
+                    aria-label="Back to conversations"
+                >
+                    ←
+                </button>
                 <Avatar src={avatar} name={name} size="md" online={isOnline} />
                 <div>
                     <p className="text-white font-semibold text-sm">{name}</p>

@@ -1,4 +1,5 @@
 import User from '../models/User.js'
+import Conversation from '../models/Conversation.js'
 import { redis } from '../config/redis.js'
 
 const ONLINE_USERS_KEY = 'online_users'
@@ -16,11 +17,26 @@ export const getProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
     try {
         const { name, avatar } = req.body
+        const updates = {}
+        if (typeof name === 'string') updates.name = name.trim()
+        if (typeof avatar === 'string') updates.avatar = avatar
+        if (Object.keys(updates).length === 0)
+            return res.status(400).json({ message: 'No profile changes provided' })
+
         const user = await User.findByIdAndUpdate(
             req.user._id,
-            { name, avatar },
+            { $set: updates },
             { new: true, runValidators: true }
         ).select('-otp -otpExpiry')
+
+        const conversations = await Conversation.find({ participants: req.user._id }).select('participants')
+        const cacheKeys = new Set([`conversations:${req.user._id}`])
+        conversations.forEach(conversation => {
+            conversation.participants.forEach(participantId => {
+                cacheKeys.add(`conversations:${participantId}`)
+            })
+        })
+        await Promise.all([...cacheKeys].map(key => redis.del(key)))
 
         res.json({ user })
     } catch {
