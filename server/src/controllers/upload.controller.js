@@ -9,7 +9,8 @@ export const uploadImage = async (req, res) => {
             publicId: req.file.filename,
             type: 'image'
         })
-    } catch {
+    } catch (err) {
+        console.error('uploadImage error:', err)
         res.status(500).json({ message: 'Upload failed' })
     }
 }
@@ -24,7 +25,8 @@ export const uploadFile = async (req, res) => {
             fileName: req.file.originalname,
             type: 'file'
         })
-    } catch {
+    } catch (err) {
+        console.error('uploadFile error:', err)
         res.status(500).json({ message: 'Upload failed' })
     }
 }
@@ -37,7 +39,8 @@ export const uploadAvatar = async (req, res) => {
             url: req.file.path,
             publicId: req.file.filename
         })
-    } catch {
+    } catch (err) {
+        console.error('uploadAvatar error:', err)
         res.status(500).json({ message: 'Upload failed' })
     }
 }
@@ -53,7 +56,8 @@ export const deleteFile = async (req, res) => {
         })
 
         res.json({ message: 'File deleted' })
-    } catch {
+    } catch (err) {
+        console.error('deleteFile error:', err)
         res.status(500).json({ message: 'Delete failed' })
     }
 }

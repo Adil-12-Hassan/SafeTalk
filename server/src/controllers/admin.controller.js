@@ -11,7 +11,8 @@ export const createUser = async (req, res) => {
 
         const user = await User.create({ name, email, isAdmin: isAdmin || false })
         res.status(201).json({ message: 'User created', user })
-    } catch {
+    } catch (err) {
+        console.error('createUser error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -21,7 +22,8 @@ export const getAllUsers = async (req, res) => {
     try {
         const users = await User.find().select('-otp -otpExpiry').sort({ createdAt: -1 })
         res.json({ users })
-    } catch {
+    } catch (err) {
+        console.error('getAllUsers error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -35,7 +37,8 @@ export const toggleUserStatus = async (req, res) => {
         user.isActive = !user.isActive
         await user.save()
         res.json({ message: `User ${user.isActive ? 'activated' : 'deactivated'}`, user })
-    } catch {
+    } catch (err) {
+        console.error('toggleUserStatus error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -49,7 +52,8 @@ export const deleteUser = async (req, res) => {
 
         await user.deleteOne()
         res.json({ message: 'User deleted' })
-    } catch {
+    } catch (err) {
+        console.error('deleteUser error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -66,7 +70,8 @@ export const updateUser = async (req, res) => {
 
         if (!user) return res.status(404).json({ message: 'User not found' })
         res.json({ message: 'User updated', user })
-    } catch {
+    } catch (err) {
+        console.error('updateUser error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }

@@ -15,7 +15,8 @@ const protect = async (req, res, next) => {
                 message: "User not found"
             })
         next()
-    } catch {
+    } catch (err) {
+        console.error('Auth middleware error:', err.message)
         res.status(401).json({
             message: "Invalid token"
         })

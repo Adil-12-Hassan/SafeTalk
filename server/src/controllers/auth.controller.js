@@ -63,7 +63,7 @@ export const verifyOTP = async (req, res) => {
     try {
         const { email, otp } = req.body;
         if (!email || !otp) return res.status(400).json({
-            message: "Emaill and OTP required"
+            message: "Email and OTP required"
         })
         const user = await User.findOne({ email, isActive: true })
         if (!user) return res.status(404).json({

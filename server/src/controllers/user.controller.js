@@ -8,7 +8,8 @@ const ONLINE_USERS_KEY = 'online_users'
 export const getProfile = async (req, res) => {
     try {
         res.json({ user: req.user })
-    } catch {
+    } catch (err) {
+        console.error('getProfile error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -39,7 +40,8 @@ export const updateProfile = async (req, res) => {
         await Promise.all([...cacheKeys].map(key => redis.del(key)))
 
         res.json({ user })
-    } catch {
+    } catch (err) {
+        console.error('updateProfile error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -62,7 +64,8 @@ export const searchUsers = async (req, res) => {
             .limit(10)
 
         res.json({ users })
-    } catch {
+    } catch (err) {
+        console.error('searchUsers error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -73,7 +76,8 @@ export const getOnlineUsers = async (req, res) => {
         const onlineMap = await redis.hgetall(ONLINE_USERS_KEY)
         const onlineUserIds = onlineMap ? Object.keys(onlineMap) : []
         res.json({ onlineUsers: onlineUserIds })
-    } catch {
+    } catch (err) {
+        console.error('getOnlineUsers error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }
@@ -91,7 +95,8 @@ export const getUserById = async (req, res) => {
         // Check online status from Redis
         const socketId = await redis.hget(ONLINE_USERS_KEY, req.params.id)
         res.json({ user, isOnline: !!socketId })
-    } catch {
+    } catch (err) {
+        console.error('getUserById error:', err)
         res.status(500).json({ message: 'Server error' })
     }
 }

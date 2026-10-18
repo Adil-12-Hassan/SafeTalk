@@ -22,12 +22,22 @@ export const SocketProvider = ({ children }) => {
     useEffect(() => {
         if (!isAuthenticated) return
 
+        const cookieToken = document.cookie
+            .split(';')
+            .map(c => c.trim())
+            .find(c => c.startsWith('token='))
+            ?.split('=')[1]
+
         const socket = io(import.meta.env.VITE_SOCKET_URL, {
             withCredentials: true,
-            auth: { token: document.cookie.split('token=')[1] }
+            auth: { token: cookieToken }
         })
 
         socketRef.current = socket
+
+        socket.on('connect_error', (err) => {
+            console.error('Socket connection error:', err.message)
+        })
 
         socket.on('user_online', ({ userId }) => addOnlineUser(userId))
         socket.on('user_offline', ({ userId }) => removeOnlineUser(userId))
