@@ -1,8 +1,5 @@
 import Conversation from '../models/Conversation.js'
 import Message from '../models/Message.js'
-import { redis } from '../config/redis.js'
-
-const CACHE_TTL = 60 * 15 // 15 minutes
 
 // Create or get direct conversation
 export const getOrCreateDirect = async (req, res) => {
@@ -25,9 +22,6 @@ export const getOrCreateDirect = async (req, res) => {
             })
             await conversation.populate('participants', 'name avatar lastSeen')
         }
-
-        // Invalidate user's conversation cache
-        await redis.del(`conversations:${req.user._id}`)
 
         res.json({ conversation })
     } catch (err) {
@@ -56,11 +50,6 @@ export const createGroup = async (req, res) => {
 
         await conversation.populate('participants', 'name avatar')
 
-        // Invalidate cache for all participants
-        await Promise.all(
-            allParticipants.map(id => redis.del(`conversations:${id}`))
-        )
-
         res.status(201).json({ conversation })
     } catch (err) {
         console.error('createGroup error:', err)
@@ -71,21 +60,12 @@ export const createGroup = async (req, res) => {
 // Get all conversations for current user
 export const getMyConversations = async (req, res) => {
     try {
-        const cacheKey = `conversations:${req.user._id}`
-
-        // Check Redis cache
-        const cached = await redis.get(cacheKey)
-        if (cached) return res.json({ conversations: JSON.parse(cached), fromCache: true })
-
         const conversations = await Conversation.find({
             participants: req.user._id
         })
             .populate('participants', 'name avatar lastSeen')
             .populate('lastMessage')
             .sort({ lastMessageAt: -1 })
-
-        // Save to Redis
-        await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(conversations))
 
         res.json({ conversations })
     } catch (err) {
@@ -129,11 +109,6 @@ export const updateGroup = async (req, res) => {
         if (groupAvatar) conversation.groupAvatar = groupAvatar
         await conversation.save()
 
-        // Invalidate cache for all participants
-        await Promise.all(
-            conversation.participants.map(id => redis.del(`conversations:${id}`))
-        )
-
         res.json({ conversation })
     } catch (err) {
         console.error('updateGroup error:', err)
@@ -158,7 +133,6 @@ export const addParticipant = async (req, res) => {
 
         conversation.participants.push(userId)
         await conversation.save()
-        await redis.del(`conversations:${userId}`)
 
         res.json({ message: 'Participant added', conversation })
     } catch (err) {
@@ -183,7 +157,6 @@ export const removeParticipant = async (req, res) => {
             p => p.toString() !== userId
         )
         await conversation.save()
-        await redis.del(`conversations:${userId}`)
 
         res.json({ message: 'Participant removed', conversation })
     } catch (err) {

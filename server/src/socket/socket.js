@@ -3,9 +3,7 @@ import jwt from 'jsonwebtoken'
 import User from '../models/User.js'
 import Message from '../models/Message.js'
 import Conversation from '../models/Conversation.js'
-import { redis } from '../config/redis.js'
-
-const ONLINE_USERS_KEY = 'online_users'
+import { addOnlineSocket, isUserOnlineExcept, removeOnlineSocket } from '../utils/presence.js'
 let io
 
 export const initSocket = (server, clientOrigin) => {
@@ -43,9 +41,9 @@ export const initSocket = (server, clientOrigin) => {
         const userId = socket.user._id.toString()
 
         // --- PRESENCE ---
-        await redis.hset(ONLINE_USERS_KEY, userId, socket.id)
+        const isFirstSocket = addOnlineSocket(userId, socket.id)
         await User.findByIdAndUpdate(userId, { lastSeen: new Date() })
-        socket.broadcast.emit('user_online', { userId })
+        if (isFirstSocket) socket.broadcast.emit('user_online', { userId })
 
         // Join all user's conversation rooms
         const conversations = await Conversation.find({ participants: userId })
@@ -80,20 +78,13 @@ export const initSocket = (server, clientOrigin) => {
                 conversation.lastMessageAt = new Date()
                 await conversation.save()
 
-                // Invalidate caches
-                await redis.del(`messages:${conversationId}:1`)
-                await Promise.all(
-                    conversation.participants.map(id => redis.del(`conversations:${id}`))
-                )
-
                 // Emit to room
                 io.to(conversationId).emit('new_message', { message })
 
                 // Mark delivered for online participants
-                const onlineMap = await redis.hgetall(ONLINE_USERS_KEY)
                 const deliveredTo = conversation.participants
                     .map(p => p.toString())
-                    .filter(id => id !== userId && onlineMap?.[id])
+                    .filter(id => isUserOnlineExcept(id, userId))
 
                 if (deliveredTo.length) {
                     await Message.findByIdAndUpdate(message._id, {
@@ -110,9 +101,7 @@ export const initSocket = (server, clientOrigin) => {
         })
 
         // --- TYPING ---
-        socket.on('typing_start', async ({ conversationId }) => {
-            const key = `typing:${conversationId}`
-            await redis.setex(key, 10, userId)
+        socket.on('typing_start', ({ conversationId }) => {
             socket.to(conversationId).emit('typing_start', {
                 conversationId,
                 userId,
@@ -120,8 +109,7 @@ export const initSocket = (server, clientOrigin) => {
             })
         })
 
-        socket.on('typing_stop', async ({ conversationId }) => {
-            await redis.del(`typing:${conversationId}`)
+        socket.on('typing_stop', ({ conversationId }) => {
             socket.to(conversationId).emit('typing_stop', {
                 conversationId,
                 userId
@@ -134,8 +122,6 @@ export const initSocket = (server, clientOrigin) => {
                 { conversationId, readBy: { $ne: userId } },
                 { $addToSet: { readBy: userId } }
             )
-            await redis.del(`messages:${conversationId}:1`)
-
             socket.to(conversationId).emit('message_read', {
                 conversationId,
                 userId
@@ -149,9 +135,11 @@ export const initSocket = (server, clientOrigin) => {
 
         // --- DISCONNECT ---
         socket.on('disconnect', async () => {
-            await redis.hdel(ONLINE_USERS_KEY, userId)
-            await User.findByIdAndUpdate(userId, { lastSeen: new Date() })
-            socket.broadcast.emit('user_offline', { userId })
+            const isLastSocket = removeOnlineSocket(userId, socket.id)
+            if (isLastSocket) {
+                await User.findByIdAndUpdate(userId, { lastSeen: new Date() })
+                socket.broadcast.emit('user_offline', { userId })
+            }
         })
     })
 

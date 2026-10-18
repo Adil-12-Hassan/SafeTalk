@@ -1,6 +1,6 @@
 # SafeTalk
 
-SafeTalk is a real-time messaging app with private one-to-one and group conversations. The project contains a React/Vite client and an Express API backed by MongoDB, Redis, Socket.IO, and Cloudinary.
+SafeTalk is a real-time messaging app with private one-to-one and group conversations. The project contains a React/Vite client and an Express API backed by MongoDB, Socket.IO, and Cloudinary.
 
 ## Features
 
@@ -15,7 +15,6 @@ SafeTalk is a real-time messaging app with private one-to-one and group conversa
 
 - Node.js and npm
 - A MongoDB connection string
-- A Redis connection URL
 - SMTP credentials for sending OTP emails
 - Cloudinary credentials for file uploads
 
@@ -27,7 +26,6 @@ Create `server/.env` with the following variables. Keep real credentials private
 PORT=5000
 CLIENT_URL=http://localhost:5173
 MONGO_URI=
-REDIS_URL=
 JWT_SECRET=
 JWT_EXPIRES_IN=7d
 EMAIL_USER=

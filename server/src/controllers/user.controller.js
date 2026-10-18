@@ -1,6 +1,5 @@
 import User from '../models/User.js'
-import Conversation from '../models/Conversation.js'
-import { redis } from '../config/redis.js'
+import { getOnlineUserIds, isUserOnline } from '../utils/presence.js'
 
 const ONLINE_USERS_KEY = 'online_users'
 
@@ -29,15 +28,6 @@ export const updateProfile = async (req, res) => {
             { $set: updates },
             { new: true, runValidators: true }
         ).select('-otp -otpExpiry')
-
-        const conversations = await Conversation.find({ participants: req.user._id }).select('participants')
-        const cacheKeys = new Set([`conversations:${req.user._id}`])
-        conversations.forEach(conversation => {
-            conversation.participants.forEach(participantId => {
-                cacheKeys.add(`conversations:${participantId}`)
-            })
-        })
-        await Promise.all([...cacheKeys].map(key => redis.del(key)))
 
         res.json({ user })
     } catch (err) {
@@ -70,12 +60,10 @@ export const searchUsers = async (req, res) => {
     }
 }
 
-// Get online users (Redis)
+// Get online users
 export const getOnlineUsers = async (req, res) => {
     try {
-        const onlineMap = await redis.hgetall(ONLINE_USERS_KEY)
-        const onlineUserIds = onlineMap ? Object.keys(onlineMap) : []
-        res.json({ onlineUsers: onlineUserIds })
+        res.json({ onlineUsers: getOnlineUserIds() })
     } catch (err) {
         console.error('getOnlineUsers error:', err)
         res.status(500).json({ message: 'Server error' })
@@ -92,9 +80,7 @@ export const getUserById = async (req, res) => {
 
         if (!user) return res.status(404).json({ message: 'User not found' })
 
-        // Check online status from Redis
-        const socketId = await redis.hget(ONLINE_USERS_KEY, req.params.id)
-        res.json({ user, isOnline: !!socketId })
+        res.json({ user, isOnline: isUserOnline(req.params.id) })
     } catch (err) {
         console.error('getUserById error:', err)
         res.status(500).json({ message: 'Server error' })

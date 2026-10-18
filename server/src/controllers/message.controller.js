@@ -1,8 +1,6 @@
 import Message from '../models/Message.js'
 import Conversation from '../models/Conversation.js'
-import { redis } from '../config/redis.js'
 
-const MESSAGES_CACHE_TTL = 60 * 30 // 30 minutes
 const MESSAGES_LIMIT = 30
 
 // Send message
@@ -37,12 +35,6 @@ export const sendMessage = async (req, res) => {
         conversation.lastMessageAt = new Date()
         await conversation.save()
 
-        // Invalidate caches
-        await redis.del(`messages:${conversationId}:1`)
-        await Promise.all(
-            conversation.participants.map(id => redis.del(`conversations:${id}`))
-        )
-
         res.status(201).json({ message })
     } catch (err) {
         console.error('sendMessage error:', err)
@@ -63,13 +55,6 @@ export const getMessages = async (req, res) => {
         })
         if (!conversation) return res.status(403).json({ message: 'Not a participant' })
 
-        // Only cache first page
-        if (!cursor) {
-            const cacheKey = `messages:${conversationId}:1`
-            const cached = await redis.get(cacheKey)
-            if (cached) return res.json({ ...JSON.parse(cached), fromCache: true })
-        }
-
         const query = { conversationId }
         if (cursor) query._id = { $lt: cursor } // Load older messages
 
@@ -85,15 +70,6 @@ export const getMessages = async (req, res) => {
             messages: messages.reverse(), // Oldest first for UI
             hasMore,
             nextCursor
-        }
-
-        // Cache first page only
-        if (!cursor) {
-            await redis.setex(
-                `messages:${conversationId}:1`,
-                MESSAGES_CACHE_TTL,
-                JSON.stringify(result)
-            )
         }
 
         res.json(result)
@@ -123,9 +99,6 @@ export const markAsRead = async (req, res) => {
             { $addToSet: { readBy: req.user._id } }
         )
 
-        // Invalidate message cache
-        await redis.del(`messages:${conversationId}:1`)
-
         res.json({ message: 'Marked as read' })
     } catch (err) {
         console.error('markAsRead error:', err)
@@ -143,9 +116,6 @@ export const deleteMessage = async (req, res) => {
         if (!message) return res.status(404).json({ message: 'Message not found' })
 
         await message.deleteOne()
-
-        // Invalidate cache
-        await redis.del(`messages:${message.conversationId}:1`)
 
         res.json({ message: 'Message deleted' })
     } catch (err) {

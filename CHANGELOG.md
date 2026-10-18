@@ -17,5 +17,8 @@ All notable changes to SafeTalk are documented here.
 
 - Client styling and missing frontend API exports.
 - Authentication response and authorization data needed for admin access.
-- Redis configuration loading during server startup.
 - Chat scrolling to the latest messages and loading older messages while preserving scroll position.
+
+### Removed
+
+- Redis dependency and caching; online presence is tracked in-process.

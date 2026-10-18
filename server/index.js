@@ -5,7 +5,6 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 
 import connectDB from './src/config/db.js'
-import connectRedis from './src/config/redis.js'
 import { initSocket } from './src/socket/socket.js'
 import authRoutes from './src/routes/auth.routes.js'
 import adminRoutes from './src/routes/admin.routes.js'
@@ -20,8 +19,6 @@ const clientOrigin = process.env.CLIENT_URL?.trim().replace(/\/+$/, '')
 app.use(cors({ origin: clientOrigin, credentials: true }))
 app.use(express.json())
 app.use(cookieParser())
-
-connectRedis();
 
 app.get('/', (req, res) => res.json({ message: 'SafeTalk API running' }))
 app.use('/api', async (req, res, next) => {
