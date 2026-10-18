@@ -21,7 +21,7 @@ app.use(cors({ origin: clientOrigin, credentials: true }))
 app.use(express.json())
 app.use(cookieParser())
 
-connectRedis()
+connectRedis();
 
 app.get('/', (req, res) => res.json({ message: 'SafeTalk API running' }))
 app.use('/api', async (req, res, next) => {
